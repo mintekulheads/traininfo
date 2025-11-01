@@ -8,7 +8,7 @@ document.getElementById('fullscreen-btn').addEventListener('click', () => {
 });
 
 // Resrobot v2.1 API-inställningar (uppdaterat från Trafiklab docs)
-const ACCESS_ID = 'DIN_ACCESSID'; // Ersätt med din accessId från trafiklab.se
+const ACCESS_ID = '67cc086d-ec22-47f2-a7eb-964568ee3756'; // Ersätt med din accessId från trafiklab.se
 const STOP_ID = '740001001'; // Rätt ID för Arvika station (från Stop Lookup)
 const BASE_URL = 'https://api.resrobot.se/v2.1';
 const TRANSPORT_MODE = 'RAIL'; // RAIL för tåg (TRAIN fungerar inte)
