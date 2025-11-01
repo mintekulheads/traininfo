@@ -3,22 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tåg & Film – Fullskärm</title>
+  <title>Arvika Tåg – Ankomster & Avgångar | Fullskärm</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
     <!-- Video i bakgrunden -->
     <video id="bg-video" autoplay muted loop playsinline>
-      <source src="test_tv." type="video/mp4">
+      <source src="train-video.mp4" type="video/mp4">
       Din webbläsare stödjer inte video.
     </video>
 
     <!-- Tågtider -->
     <div class="train-info">
-      <h1>Avgångar från Stockholm C</h1>
-      <ul id="train-list"></ul>
-      <button id="refresh-btn">Uppdatera tågtider</button>
+      <h1>Arvika Station (740000001)</h1>
+      
+      <!-- Flikar -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('departures')">Avgångar</button>
+        <button class="tab-btn" onclick="switchTab('arrivals')">Ankomster</button>
+      </div>
+      
+      <ul id="train-list" class="departures"></ul>
+      <ul id="train-list-arrivals" class="arrivals" style="display: none;"></ul>
+      
+      <button id="refresh-btn">Uppdatera</button>
     </div>
 
     <!-- Fullskärmsknapp -->
