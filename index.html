@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tåg & Film – Fullskärm</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Video i bakgrunden -->
+    <video id="bg-video" autoplay muted loop playsinline>
+      <source src="test_tv." type="video/mp4">
+      Din webbläsare stödjer inte video.
+    </video>
+
+    <!-- Tågtider -->
+    <div class="train-info">
+      <h1>Avgångar från Stockholm C</h1>
+      <ul id="train-list"></ul>
+      <button id="refresh-btn">Uppdatera tågtider</button>
+    </div>
+
+    <!-- Fullskärmsknapp -->
+    <button id="fullscreen-btn">🖥 Fullskärm</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
