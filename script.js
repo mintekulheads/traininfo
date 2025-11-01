@@ -7,15 +7,15 @@ document.getElementById('fullscreen-btn').addEventListener('click', () => {
   }
 });
 
-// Trafiklab API-inställningar
-const API_KEY = '0edb3886e0f6456b8c6cd587fd074fe4'; // Ersätt med din nyckel från trafiklab.se
-const STOP_ID = '740000001'; // Arvika
-const BASE_URL = 'https://realtime-api.trafiklab.se/v1';
-const TRANSPORT_MODE = 'TRAIN'; // Endast tåg
+// Resrobot v2.1 API-inställningar (uppdaterat från Trafiklab docs)
+const ACCESS_ID = 'DIN_ACCESSID'; // Ersätt med din accessId från trafiklab.se
+const STOP_ID = '740001001'; // Rätt ID för Arvika station (från Stop Lookup)
+const BASE_URL = 'https://api.resrobot.se/v2.1';
+const TRANSPORT_MODE = 'RAIL'; // RAIL för tåg (TRAIN fungerar inte)
 
 let currentTab = 'departures';
 
-// Flik-byte
+// Flik-byte (samma som tidigare)
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -33,38 +33,51 @@ function switchTab(tab) {
   }
 }
 
-// Hämta data från API
+// Hämta data från Resrobot API
 async function fetchData(endpoint) {
-  const now = new Date().toISOString();
-  const url = `${BASE_URL}/${endpoint}/${STOP_ID}?key=${API_KEY}&dateTime=${now}&transportMode=${TRANSPORT_MODE}`;
+  const now = new Date().toISOString().slice(0, 16) + ':00'; // YYYY-MM-DDTHH:MM
+  const url = `${BASE_URL}/${endpoint}?id=${STOP_ID}&accessId=${ACCESS_ID}&format=json&timeSpan=60&transportations=${TRANSPORT_MODE}`;
   
   try {
     const response = await fetch(url);
-    if (!response.ok) throw new Error('API-fel');
-    return await response.json();
+    if (!response.ok) throw new Error(`API-fel: ${response.status}`);
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.error(err);
-    return { Journeys: [] };
+    return null;
   }
 }
 
-// Visa lista
-function displayTrains(journeys, listElement, isArrival = false) {
+// Visa lista (uppdaterad för v2.1 struktur)
+function displayTrains(data, listElement, isArrival = false) {
+  if (!data || !data.Trip || !Array.isArray(data.Trip)) {
+    listElement.innerHTML = '<li>Inga tågtider just nu. Kontrollera accessId och stopp-ID!</li>';
+    return;
+  }
+
+  const journeys = data.Trip;
   listElement.innerHTML = journeys.length ? '' : '<li>Inga tågtider just nu.</li>';
   
-  journeys.slice(0, 10).forEach(journey => { // Nästa 10
-    const time = journey.OriginTime || journey.Time; // Planerad tid
-    const estimatedTime = journey.OriginDateTime || journey.DateTime; // Uppskattad
-    const delay = estimatedTime !== time ? ` (+${Math.floor((new Date(estimatedTime) - new Date(time)) / 60000)} min)` : '';
+  journeys.slice(0, 10).forEach(journey => {
+    const origin = journey.Origin || {};
+    const destination = journey.Destination || {};
+    const time = origin.time || ''; // HH:MM
+    const date = origin.date || ''; // YYYY-MM-DD
+    const fullTime = new Date(`${date}T${time}`).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
     
-    const originOrDest = isArrival ? journey.Origin : journey.Destination;
-    const direction = isArrival ? `Från ${originOrDest}` : `Till ${originOrDest}`;
-    const track = journey.Track || '?';
-    const line = journey.LineNumber || 'Okänd';
+    // Försening: fgColor = "FF0000" för rött (delay), diffMins för minuter
+    const fgColor = origin.fgColor || '';
+    const diffMins = origin.diffMins || 0;
+    const delay = fgColor === 'FF0000' && diffMins > 0 ? ` (+${diffMins} min)` : '';
+    
+    const direction = isArrival ? `Från ${origin.name || 'Okänd'}` : `Till ${destination.name || 'Okänd'}`;
+    const track = origin.track || '?';
+    const line = journey.LegList?.Leg[0]?.line || 'Okänd'; // Första benets linje
     
     const li = document.createElement('li');
     li.innerHTML = `
-      <strong>${new Date(time).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}</strong>
+      <strong>${fullTime}</strong>
       ${delay ? `<span class="delay">${delay}</span>` : ''}
       → ${direction} (Spår ${track}, Linje ${line})
     `;
@@ -74,14 +87,14 @@ function displayTrains(journeys, listElement, isArrival = false) {
 
 // Hämta och visa avgångar
 async function fetchDepartures() {
-  const data = await fetchData('departures');
-  displayTrains(data.Journeys || [], document.getElementById('train-list'), false);
+  const data = await fetchData('departureBoard');
+  displayTrains(data, document.getElementById('train-list'), false);
 }
 
 // Hämta och visa ankomster
 async function fetchArrivals() {
-  const data = await fetchData('arrivals');
-  displayTrains(data.Journeys || [], document.getElementById('train-list-arrivals'), true);
+  const data = await fetchData('arrivalBoard');
+  displayTrains(data, document.getElementById('train-list-arrivals'), true);
 }
 
 // Uppdatera allt
